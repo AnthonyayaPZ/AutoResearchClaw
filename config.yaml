@@ -1,0 +1,110 @@
+project:
+  name: "multiagent-worldmodel-neurodegeneration"
+  mode: "full-auto"
+
+research:
+  topic: "Multi-agent systems and world models for neurodegenerative disease treatment planning"
+  domains:
+    - "machine-learning"
+    - "multi-agent-systems"
+    - "neuroscience"
+    - "medicine"
+    - "healthcare"
+  daily_paper_count: 8
+  quality_threshold: 4.0
+  graceful_degradation: true
+
+runtime:
+  timezone: "Asia/Shanghai"
+  max_parallel_tasks: 2        # 资源有限，严格单任务
+  approval_timeout_hours: 24
+  retry_limit: 2
+
+notifications:
+  channel: "console"
+  target: ""
+  on_stage_start: true
+  on_stage_fail: true
+  on_gate_required: true
+
+openclaw_bridge:
+  use_cron: false
+  use_message: true            # 启用 OpenClaw 消息适配器
+  use_memory: true             # 保存运行状态到桥接记忆
+  use_sessions_spawn: false
+  use_web_fetch: false
+  use_browser: false
+
+# === LLM：通过 OpenClaw OAuth 使用 OpenAI ===
+llm:
+  provider: "acp"
+  notes: "Baseline papers at /root/documents/paper/ — B1=neuro, B2=worldmodel, B3=multiagent (alphabetical order)"
+  acp:
+    agent: "codex"             # OpenAI Codex CLI（通过 OpenClaw OAuth 鉴权）
+    cwd: "."
+    session_name: "researchclaw"
+    timeout_sec: 1800
+
+security:
+  hitl_required_stages: []     # full-auto，无人工审批节点
+  allow_publish_without_approval: false
+  redact_sensitive_logs: true
+
+# === 实验：使用模拟结果，适配资源受限环境 ===
+experiment:
+  mode: "simulated"            # 不执行真实代码，使用公式生成模拟数据
+  time_budget_sec: 180
+  max_iterations: 5
+  max_refine_duration_sec: 0
+  metric_key: "primary_metric"
+  metric_direction: "maximize"
+  keep_threshold: 0.0
+  sandbox:
+    python_path: ".venv/bin/python3"
+    gpu_required: false
+    max_memory_mb: 1024        # 内存受限，保守设置
+  opencode:
+    enabled: false             # 资源受限，关闭 OpenCode Beast Mode
+    auto: false
+    complexity_threshold: 1.0
+
+# === 图表生成 ===
+  figure_agent:
+    enabled: true
+    min_figures: 2
+    max_figures: 5
+    max_iterations: 2
+    render_timeout_sec: 30
+    output_format: "python"
+    nano_banana_enabled: false  # 资源受限，关闭 Gemini 图像生成
+    strict_mode: false
+    dpi: 150
+
+# === 自定义 Prompt ===
+prompts:
+  custom_file: "my_prompts.yaml"
+
+# === Web 搜索（含 Tavily）===
+web_search:
+  enabled: true
+  tavily_api_key: "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"
+  tavily_api_key_env: ""       # 直接使用上方 api_key，不从环境变量读取
+  enable_scholar: true
+  enable_crawling: false        # 资源受限，关闭网页抓取
+  enable_pdf_extraction: true
+  max_web_results: 8
+  max_scholar_results: 8
+  max_crawl_urls: 0
+
+# === 导出 ===
+export:
+  target_conference: "neurips_2025"
+  authors: "Anonymous"
+  bib_file: "references"
+
+knowledge_base:
+  backend: "markdown"
+  root: "docs/kb"
+
+metaclaw_bridge:
+  enabled: false
