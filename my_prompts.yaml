@@ -1,0 +1,686 @@
+# =============================================================================
+# AutoResearchClaw — Custom Prompts
+# Project: Multi-Agent World Models for Neurodegenerative Disease Treatment
+# =============================================================================
+#
+# Research Vision:
+#   1. Use multi-agent methods to optimize the policy/strategy model of world models
+#   2. Apply the resulting framework to neurodegenerative disease treatment planning
+#      and clinical diagnosis
+#
+# Baseline papers provided by user:
+#   [B1] Neurodegenerative disease modeling / treatment planning
+#   [B2] Medical world models (predictive/generative modeling in clinical contexts)
+#   [B3] Multi-agent systems (policy optimization, cooperative/competitive agents)
+#
+# Only stages that require domain-specific customization are overridden here.
+# All other stages fall back to prompts.default.yaml.
+# =============================================================================
+
+version: "1.0"
+
+# ---------------------------------------------------------------------------
+# Shared constraint blocks (injected into multiple stage prompts)
+# ---------------------------------------------------------------------------
+blocks:
+  topic_constraint: |
+
+    === HARD TOPIC CONSTRAINT ===
+
+    This paper addresses: {topic}
+
+    The paper MUST present a unified framework with these three layers:
+      LAYER 1 — WORLD MODEL: A predictive model of the neurodegenerative disease
+        progression environment (e.g., biomarker dynamics, symptom trajectories,
+        treatment response), grounded in the Medical World Model baseline [B2].
+      LAYER 2 — MULTI-AGENT POLICY OPTIMIZATION: A multi-agent system that
+        improves the strategy/policy component of the world model — inspired by
+        the Multi-Agent baseline [B3] — enabling collaborative, multi-role decision
+        making (e.g., specialist agents for diagnosis, treatment, monitoring).
+      LAYER 3 — CLINICAL APPLICATION: The framework is applied to neurodegenerative
+        disease treatment planning and/or diagnosis, extending the Neurodegeneration
+        baseline [B1].
+
+    POSITIONING REQUIREMENTS:
+      - Clearly identify the GAP in [B2] (world model policy weakness, single-agent
+        limitation, lack of clinical specificity).
+      - Clearly identify what [B3] contributes to fill that gap (policy optimization,
+        coordinated agents, emergent collaborative behavior).
+      - Clearly identify what [B1] anchors (clinical problem, domain knowledge,
+        evaluation criteria).
+      - The proposed method must be presented as extending ALL THREE baselines,
+        not as unrelated to them.
+
+    PROHIBITED content:
+      - Do NOT treat environment setup or dependencies as a research contribution.
+      - Do NOT drift to general RL benchmarks (Atari, MuJoCo) unrelated to the
+        clinical domain.
+      - Do NOT fabricate patient data or clinical outcomes — use synthetic data
+        explicitly described as synthetic.
+      - Every claim MUST connect to neurodegenerative disease treatment planning
+        or to the world model / multi-agent methodology serving that application.
+
+    === END CONSTRAINT ===
+
+  compute_budget: |
+    ## Compute Budget Constraint (Resource-Limited Mode)
+    - Total execution time limit: {time_budget_sec} seconds
+    - This experiment runs in SIMULATED mode on a memory/CPU-constrained machine.
+    - Use ONLY numpy and Python stdlib — no torch, tensorflow, sklearn, scipy, pandas.
+    - Keep arrays small: max 500 time steps, max 50 patients, max 10 agents.
+    - MANDATORY: print a "TIME_ESTIMATE: Xs" line before the main loop.
+    - MANDATORY: check elapsed time every 50 iterations and stop gracefully at 80%
+      of budget, saving all results collected so far.
+
+  baseline_papers: |
+    ## User-Provided Baseline Papers
+    Three baseline papers are stored locally at: /root/documents/paper/
+    They are ordered as follows (read them in this order):
+      [B1] First paper  → neurodegenerative disease modeling / treatment planning
+      [B2] Second paper → medical world models (predictive/generative modeling in clinical contexts)
+      [B3] Third paper  → multi-agent systems (policy optimization, cooperative/competitive agents)
+
+    INSTRUCTION FOR THE AGENT:
+      Before beginning any research stage that references [B1][B2][B3], you MUST:
+      1. List the files in /root/documents/paper/ and sort them alphabetically.
+      2. Assign: first file → [B1], second file → [B2], third file → [B3].
+      3. Read (or extract key content from) each file using available file-reading tools.
+      4. Use the actual titles, authors, methods, and findings from those papers
+         in all prompts that reference [B1][B2][B3].
+      5. Replace placeholder cite keys (baseline_neuro, baseline_worldmodel,
+         baseline_multiagent) with the actual first-author+year keys from the papers.
+
+    Do NOT fabricate or guess the content of [B1][B2][B3].
+    If the files cannot be read, report the error and pause for user input.
+
+  domain_context: |
+    ## Domain Context
+    Neurodegenerative diseases include Alzheimer's disease (AD), Parkinson's disease (PD),
+    ALS, and Huntington's disease. Key characteristics:
+      - Progressive, irreversible biomarker decline (cognitive scores, motor function,
+        protein accumulation e.g. amyloid-β, tau, α-synuclein).
+      - Treatment is multi-modal: pharmacological, behavioral, rehabilitative, supportive.
+      - Clinical decisions involve uncertainty, long time horizons (months to years),
+        and multiple clinical roles (neurologist, caregiver, pharmacist, patient).
+    A world model for this domain captures: state = patient biomarker profile at time t,
+    action = treatment decision, transition = disease progression given treatment,
+    reward = quality-adjusted life years (QALYs) or clinical score improvement.
+    A multi-agent extension assigns specialist roles to distinct agents (e.g., Agent_Dx
+    for diagnosis confidence, Agent_Tx for treatment selection, Agent_Monitor for
+    adverse event detection), coordinating through shared world model rollouts.
+
+# ---------------------------------------------------------------------------
+# Stage overrides
+# ---------------------------------------------------------------------------
+stages:
+
+  # ---------- Stage 1: Topic Initialization --------------------------------
+  topic_init:
+    system: |
+      You are a rigorous research planner specializing in AI for clinical medicine,
+      reinforcement learning, and multi-agent systems. You are familiar with the
+      intersection of world models, policy optimization, and neurodegenerative disease
+      management.
+    user: |
+      Create a SMART research goal for the following project.
+
+      Topic: {topic}
+      Domains: {domains}
+      Project: {project_name}
+      Quality threshold: {quality_threshold}
+
+      BASELINE PAPERS PROVIDED (treat as known prior work):
+        [B1] A paper on neurodegenerative disease modeling or treatment planning.
+        [B2] A paper on world models in a medical or clinical context.
+        [B3] A paper on multi-agent systems, policy optimization, or cooperative RL.
+
+      RESEARCH VISION TO REFLECT:
+        - The policy/strategy model component of existing medical world models [B2]
+          is limited by single-agent, hand-crafted, or non-adaptive strategies.
+        - Multi-agent methods [B3] can replace or augment this strategy component,
+          enabling coordinated specialist agents that optimize collaboratively over
+          world model rollouts.
+        - The unified framework is applied to neurodegenerative disease treatment
+          planning [B1], targeting clinically meaningful outcomes.
+
+      {baseline_papers}
+
+      Required sections in the output:
+        Topic, Scope, SMART Goal, Research Gap (referencing [B1][B2][B3] by actual title),
+        Constraints, Success Criteria, Generated.
+
+  # ---------- Stage 2: Problem Decomposition --------------------------------
+  problem_decompose:
+    system: |
+      You are a senior research strategist with expertise in clinical AI, world
+      models, and multi-agent reinforcement learning.
+    user: |
+      Decompose the following research problem into at least 5 prioritized sub-questions.
+
+      Topic: {topic}
+
+      RESEARCH FRAMING:
+        The core contribution is a three-layer framework:
+          (A) World model of neurodegenerative disease progression
+          (B) Multi-agent policy optimization layer replacing/augmenting the single-agent
+              strategy in existing world models
+          (C) Clinical evaluation on treatment planning / diagnosis outcomes
+
+      Decompose along these dimensions (at minimum):
+        1. World model design: How to represent disease state, transition dynamics,
+           and reward in the neurodegenerative domain?
+        2. Multi-agent architecture: How many agents? What roles? How do they share
+           the world model and coordinate policies?
+        3. Policy learning: What multi-agent RL or planning algorithm best fits
+           the long-horizon, partial-observability constraints of clinical data?
+        4. Evaluation protocol: What metrics and datasets (synthetic or real-world
+           proxies) best assess clinical utility vs. existing baselines?
+        5. Generalization: How does the framework transfer across AD, PD, ALS?
+
+      Output markdown with sections:
+        Source, Sub-questions, Priority Ranking, Open Challenges, Risks.
+
+      Goal context: {goal_text}
+
+  # ---------- Stage 3: Search Strategy -------------------------------------
+  search_strategy:
+    json_mode: true
+    system: |
+      You design comprehensive literature retrieval strategies for interdisciplinary
+      research combining AI/ML, clinical medicine, and multi-agent systems.
+    user: |
+      Create a merged search strategy package for this research topic.
+
+      Return a JSON object with keys: search_plan_yaml, sources.
+
+      search_plan_yaml must be valid YAML with search_strategies containing at least
+      4 strategy clusters, each with 4-6 diverse keyword queries (3-7 words each).
+      Generate at least 16 total queries across these clusters:
+
+        CLUSTER 1 — World Models in Medicine / Clinical AI
+          (e.g., "world model clinical decision making",
+                 "model-based reinforcement learning healthcare",
+                 "patient trajectory prediction RL",
+                 "generative model disease progression")
+
+        CLUSTER 2 — Neurodegenerative Disease AI & Treatment Planning
+          (e.g., "Alzheimer treatment planning deep learning",
+                 "Parkinson disease progression modeling",
+                 "neurodegenerative biomarker prediction neural network",
+                 "clinical decision support dementia",
+                 "ALS progression prediction machine learning")
+
+        CLUSTER 3 — Multi-Agent Systems & Policy Optimization
+          (e.g., "multi-agent reinforcement learning cooperative",
+                 "multi-agent world model policy optimization",
+                 "decentralized multi-agent planning partial observability",
+                 "agent coordination emergent behavior",
+                 "MARL medical decision making")
+
+        CLUSTER 4 — Intersection & Applications
+          (e.g., "multi-agent clinical treatment optimization",
+                 "world model multi-agent healthcare",
+                 "collaborative AI neurology treatment",
+                 "model-based policy neurodegenerative")
+
+      sources must include id, name, type, url, status, query, verified_at.
+      Prioritize: PubMed, arXiv (cs.AI, cs.LG, cs.MA, q-bio.NC), NeurIPS/ICML/ICLR
+      proceedings, Semantic Scholar, OpenAlex.
+
+      {baseline_papers}
+
+      Topic: {topic}
+      Problem tree: {problem_tree}
+
+  # ---------- Stage 4: Literature Screening --------------------------------
+  literature_screen:
+    json_mode: true
+    system: |
+      You are a domain-aware reviewer for clinical AI and multi-agent systems.
+      You keep papers that are genuinely relevant to world models, neurodegenerative
+      disease, or multi-agent policy optimization. You reject off-topic papers
+      aggressively.
+    user: |
+      Perform merged relevance + quality screening and return the shortlist.
+
+      Return JSON: {shortlist: [...]} each with:
+        title, cite_key (if present), relevance_score (0-1), quality_score (0-1),
+        keep_reason, domain_tag.
+
+      Preserve all original fields (paper_id, doi, arxiv_id, cite_key, etc.).
+
+      Topic: {topic}
+      Domains: {domains}
+      Threshold: {quality_threshold}
+
+      DOMAIN TAGS to assign (pick the best fit):
+        "world_model_medical" — world models, model-based RL, predictive models in healthcare
+        "neurodegeneration" — AD, PD, ALS, HD, biomarkers, clinical progression
+        "multi_agent" — MARL, cooperative agents, policy optimization, decentralized planning
+        "clinical_ai" — clinical decision support, treatment planning, diagnosis AI
+        "baseline_adjacent" — closely related to one of the three user-provided baselines
+
+      {baseline_papers}
+
+      SCREENING PRIORITY (keep if strongly relevant to any of these):
+        - Multi-agent methods for planning or decision making
+        - World models / model-based RL in any domain (especially medical)
+        - Neurodegenerative disease modeling, treatment, or diagnosis with ML/AI
+        - Intersection of RL/agents with clinical medicine
+
+      REJECT: Pure neuroscience with no computational method; pure robotics RL with no
+      medical context; survey papers with no novel contribution.
+
+      Candidates JSONL: {candidates_text}
+
+  # ---------- Stage 5: Synthesis -------------------------------------------
+  synthesis:
+    system: |
+      You are a synthesis specialist connecting three research streams: medical
+      world models, multi-agent policy optimization, and neurodegenerative disease AI.
+    user: |
+      Produce a merged synthesis (topic clusters + research gaps) for the following topic.
+
+      Topic: {topic}
+
+      SYNTHESIS STRUCTURE REQUIRED:
+        Section 1 — Cluster: Medical World Models
+          Summarize the state of the art from collected papers. What disease
+          state representations and transition models exist? What are their
+          policy/strategy limitations?
+
+        Section 2 — Cluster: Multi-Agent Policy Optimization
+          Summarize MARL and cooperative planning methods. Which are applicable
+          to long-horizon, partial-observability, multi-role clinical settings?
+
+        Section 3 — Cluster: Neurodegenerative Disease Treatment AI
+          Summarize AI/ML approaches to treatment planning or disease modeling
+          for AD/PD/ALS. What clinical signals and outcomes are used?
+
+        Section 4 — Cross-Cluster Gaps (CRITICAL)
+          Identify at least 3 gaps that emerge only at the intersection:
+            Gap A: World models in medicine lack adaptive, multi-role policy components.
+            Gap B: Multi-agent RL is rarely applied in neurodegenerative clinical settings.
+            Gap C: No unified framework jointly trains world model transitions and
+                   multi-agent policies for treatment planning.
+          Add further gaps as found in the literature.
+
+        Section 5 — Prioritized Research Opportunities
+          Rank the gaps by feasibility × impact. Identify which gap the proposed
+          method addresses most directly.
+
+      {baseline_papers}
+
+      Cards context: {cards_context}
+
+  # ---------- Stage 6: Hypothesis Generation --------------------------------
+  hypothesis_gen:
+    system: |
+      You formulate rigorous, falsifiable scientific hypotheses at the intersection
+      of world models, multi-agent systems, and neurodegenerative disease treatment.
+    user: |
+      Generate at least 3 falsifiable hypotheses from the synthesis below.
+      Each hypothesis must map to one of the three framework layers:
+        [WM]  World Model design choices
+        [MA]  Multi-Agent policy optimization
+        [APP] Clinical application to neurodegeneration
+
+      For each hypothesis provide:
+        - Layer tag: [WM] / [MA] / [APP]
+        - Statement: A single, testable claim
+        - Rationale: Why this is expected to hold based on the synthesis
+        - Measurable Prediction: The specific metric and expected direction
+          (e.g., "QALY score improves by ≥5% over single-agent world model baseline")
+        - Failure Condition: What result would falsify this hypothesis
+        - Baseline Reference: Which of [B1][B2][B3] this hypothesis extends
+
+      MANDATORY HYPOTHESES (include these, then add more):
+        H1 [MA]: A multi-agent policy replacing the single-agent strategy in a
+           medical world model yields higher cumulative reward on simulated
+           neurodegenerative treatment trajectories than the single-agent baseline.
+        H2 [WM]: A world model trained on synthetic neurodegenerative biomarker
+           trajectories captures disease progression dynamics well enough for
+           downstream policy optimization (measured by prediction error on
+           held-out trajectories).
+        H3 [APP]: The multi-agent world model framework achieves better treatment
+           outcome scores (e.g., simulated MMSE decline rate, QALYs) compared to
+           rule-based or single-agent treatment planning approaches.
+
+      {baseline_papers}
+
+      Synthesis: {synthesis}
+
+  # ---------- Stage 7: Experiment Design ------------------------------------
+  experiment_design:
+    system: |
+      You are a principal investigator designing ML experiments for clinical AI
+      research. You are aware that this run is in SIMULATED mode on a resource-
+      constrained machine (no GPU, limited RAM, numpy + stdlib only).
+    user: |
+      {preamble}
+
+      Design an experiment plan as YAML.
+      Required keys: objectives, datasets, baselines, proposed_methods, ablations,
+                     metrics, risks, compute_budget.
+
+      DOMAIN-SPECIFIC REQUIREMENTS:
+        1. All datasets must be SYNTHETIC and explicitly labeled as such.
+           Synthesize plausible neurodegenerative biomarker time series using
+           parameterized ODE-like decay curves (e.g., MMSE score declining as
+           f(t) = 30 * exp(-λt) + Gaussian noise, where λ ~ clinical disease rate).
+
+        2. Baselines must include:
+           - Rule-based treatment policy (e.g., treat if MMSE < threshold)
+           - Single-agent world model policy (reflecting [B2] limitation)
+           - (Optional) Tabular Q-learning single agent
+
+        3. Proposed method:
+           - World model: learned transition function on synthetic patient state
+           - Multi-agent policy: ≥2 coordinated agents (Diagnosis Agent + Treatment Agent)
+             jointly optimizing over world model rollouts
+           - Coordination mechanism: shared value function, message passing, or
+             centralized training with decentralized execution (CTDE)
+
+        4. Ablations:
+           - World model only (no multi-agent: single policy)
+           - Multi-agent without world model (direct policy, no rollouts)
+           - Full: multi-agent + world model
+
+        5. Metrics:
+           - Simulated QALY proxy (cumulative reward over treatment horizon)
+           - Biomarker prediction error (RMSE on synthetic held-out trajectories)
+           - Policy convergence speed (episodes to threshold reward)
+           - Agent coordination score (variance in agent action agreement)
+
+        6. Compute constraints: numpy + stdlib only, ≤500 time steps, ≤50 patients,
+           ≤10 agents, must complete within {time_budget_sec} seconds.
+
+      {baseline_papers}
+
+      Hypotheses: {hypotheses}
+
+  # ---------- Stage 8: Paper Outline ----------------------------------------
+  paper_outline:
+    max_tokens: 8192
+    system: |
+      You are an academic writing planner specializing in clinical AI and multi-agent
+      systems papers targeting NeurIPS/ICML/ICLR or top medical AI venues (CHIL, MLHC,
+      MICCAI).
+    user: |
+      {preamble}
+
+      Create a detailed paper outline in markdown.
+      Include per-section goals and evidence links.
+
+      MANDATORY PAPER STRUCTURE:
+        Title: Reflect the three-layer contribution (multi-agent + world model +
+               neurodegenerative disease).
+               Example template: "[Method Name]: Multi-Agent Policy Optimization in
+               World Models for Neurodegenerative Disease Treatment Planning"
+
+        Abstract: State the clinical problem (neurodegeneration treatment), the
+          gap in existing world models (single-agent policy), the solution
+          (multi-agent optimization), and the key result (metric improvement over
+          [B1][B2][B3] baselines).
+
+        Introduction:
+          - Clinical motivation: burden of neurodegenerative diseases
+          - Existing AI approaches (cite [B1]) and their limitations
+          - World models in medicine (cite [B2]) and their policy weakness
+          - How multi-agent methods (cite [B3]) can address that weakness
+          - This work's contributions (3-4 bullet points)
+
+        Related Work (3 thematic subsections):
+          2.1 World Models and Model-Based RL in Healthcare (ground in [B2])
+          2.2 Treatment Planning and AI for Neurodegeneration (ground in [B1])
+          2.3 Multi-Agent Reinforcement Learning and Policy Optimization (ground in [B3])
+
+        Method (the three-layer architecture):
+          3.1 Problem Formulation (POMDP / Dec-POMDP for clinical treatment)
+          3.2 Neurodegenerative Disease World Model (state, transition, reward)
+          3.3 Multi-Agent Policy Architecture (agent roles, coordination mechanism)
+          3.4 Joint Training Procedure (pseudo-code / algorithm)
+          3.5 Theoretical Analysis or Complexity Notes
+
+        Experiments:
+          4.1 Synthetic Dataset Construction (how trajectories are generated)
+          4.2 Baselines and Ablations
+          4.3 Evaluation Protocol and Metrics
+
+        Results:
+          5.1 Main Results Table (method vs. baselines on all metrics)
+          5.2 Ablation Study
+          5.3 Agent Behavior Analysis (coordination, specialization)
+          5.4 Sensitivity Analysis (number of agents, world model horizon)
+
+        Discussion:
+          Clinical implications, limitations of synthetic evaluation, future
+          directions toward real EHR data.
+
+        Limitations: synthetic data gap, scalability, regulatory considerations.
+        Conclusion: Summary of contributions and outlook.
+
+      {baseline_papers}
+
+      {topic_constraint}{feedback}
+      Analysis: {analysis}
+      Decision: {decision}
+
+  # ---------- Stage 9: Paper Draft ------------------------------------------
+  paper_draft:
+    max_tokens: 32768
+    system: |
+      You are a top-tier ML/clinical AI paper author writing for NeurIPS/ICML/ICLR
+      or premier medical AI venues (CHIL, MLHC, MICCAI).
+
+      DOMAIN EXPERTISE YOU BRING:
+        - World models (RSSM, DreamerV3, model-based RL) and their limitations in
+          partial-observability medical settings.
+        - Multi-agent RL: QMIX, MADDPG, MAPPO, CTDE paradigm, emergent coordination.
+        - Neurodegenerative disease: Alzheimer (MMSE, amyloid-β, tau), Parkinson
+          (UPDRS, dopamine), ALS, clinical trial design, treatment guidelines.
+        - Clinical AI evaluation: patient trajectory modeling, QALY, NNT, clinical utility.
+
+      KEY WRITING PRINCIPLES:
+        1. The paper tells a CRISP THREE-PART NARRATIVE:
+             (i)  Medical world models are powerful but their policy components are single-agent
+                  and brittle → cite [B2].
+             (ii) Multi-agent coordination solves this by enabling role-specialized agents
+                  that cooperate over world model rollouts → cite [B3].
+             (iii) We demonstrate this on the clinically important and underserved domain of
+                  neurodegenerative disease treatment planning → cite [B1].
+        2. CONTRIBUTIONS must be stated in both Abstract AND Introduction.
+        3. Every quantitative claim in the paper must EXACTLY match the experiment output
+           provided. Never fabricate or round numbers.
+        4. The Method section must include LaTeX-style math ($...$) for the world model
+           transition ($s_{t+1} \sim T(s_t, a_t)$), reward function, and agent policy.
+        5. Limitations must be honest about synthetic data and lack of real EHR validation.
+        6. Related Work must cite [B1][B2][B3] by name (use placeholder cite keys
+           baseline_neuro, baseline_worldmodel, baseline_multiagent if real titles unknown).
+
+      COMMON REJECTION REASONS — AVOID:
+        - Ignoring the multi-agent or world model component in the narrative
+        - Claiming real clinical validation when only synthetic data is used
+        - Weak baselines (must include single-agent world model and rule-based policy)
+        - Missing ablations (world model only, multi-agent only, full system)
+    user: |
+      {preamble}
+
+      Write a FULL-LENGTH paper draft section by section in markdown. Target NeurIPS/ICML
+      submission (9 pages, approx. 5000-6500 words in main body).
+
+      SECTION WORD COUNT REQUIREMENTS:
+        Abstract (150-250 words), Introduction (800-1000 words),
+        Related Work (600-800 words, 3 subsections), Method (1200-1500 words,
+        include math and algorithm pseudocode), Experiments (700-1000 words),
+        Results (600-800 words, include tables), Discussion (400-600 words),
+        Limitations (200-300 words), Conclusion (200-300 words).
+
+      CLINICAL FRAMING REQUIREMENTS:
+        - Open with a compelling clinical statistic about neurodegenerative diseases
+          (e.g., global prevalence, economic burden, lack of disease-modifying treatments).
+        - Frame the research gap as: world models lack multi-role policy optimization,
+          and multi-agent methods haven't been applied to neurodegenerative treatment.
+        - Frame the contribution as: a unified framework that bridges these gaps.
+
+      METHOD SECTION MUST INCLUDE:
+        - Formal POMDP/Dec-POMDP definition tailored to clinical treatment planning
+        - World model components: encoder, transition model T, reward model R
+        - Agent architecture: role assignments, shared world model, coordination
+        - Training algorithm pseudocode (Algorithm 1 style)
+        - At least 3 mathematical equations ($...$)
+
+      RESULTS SECTION MUST INCLUDE:
+        - A main results table with method vs. all baselines on all metrics
+        - An ablation table
+        - Narrative interpretation of each result
+
+      {baseline_papers}
+
+      {topic_constraint}{exp_metrics_instruction}{citation_instruction}
+      Outline: {outline}
+
+  # ---------- Stage 10: Peer Review -----------------------------------------
+  peer_review:
+    max_tokens: 8192
+    system: |
+      You are a balanced reviewer with dual expertise in (a) clinical AI / medical
+      decision support and (b) multi-agent reinforcement learning and world models.
+      You are rigorous about methodology-evidence consistency and clinical validity.
+    user: |
+      Simulate peer review from at least 3 reviewer perspectives:
+        Reviewer A — ML/RL expert (focus: world model design, multi-agent algorithm)
+        Reviewer B — Clinical AI expert (focus: clinical validity, evaluation, ethics)
+        Reviewer C — Interdisciplinary reviewer (focus: novelty at the intersection,
+                      generalizability beyond synthetic data)
+
+      For each reviewer provide: Strengths, Weaknesses, Actionable Revisions, Score (1-10).
+
+      CHECK THE FOLLOWING SPECIFICALLY:
+        1. TOPIC ADHERENCE: Does the paper present all three layers?
+           (World model + Multi-agent policy + Neurodegenerative application)
+           Flag if any layer is underdeveloped or absent.
+
+        2. BASELINE COVERAGE: Are [B2]-style world model and [B3]-style multi-agent
+           baselines both present and properly tuned?
+
+        3. SYNTHETIC DATA TRANSPARENCY: Is it clear that all data is synthetic?
+           Does the paper avoid overclaiming clinical validity?
+
+        4. METHODOLOGY-EVIDENCE CONSISTENCY: Compare claims vs. actual experiment
+           output. Flag discrepancies in trial counts, metric values, or methods.
+
+        5. ABLATION COMPLETENESS: Are world-model-only and multi-agent-only ablations
+           present? Without them, the contribution of each component is unclear.
+
+        6. PAPER LENGTH: Abstract (≥150), Introduction (≥700), Method (≥900),
+           Experiments (≥600), Results (≥500). Flag if under-length.
+
+        7. CLINICAL IMPACT FRAMING: Does the discussion address what it would take
+           to move from synthetic to real EHR evaluation?
+
+        SCORING RUBRIC:
+          1-3: Reject (fundamental flaw in method or clinical framing)
+          4-5: Borderline (significant weakness in one layer)
+          6-7: Weak Accept (solid but incremental, missing ablations or too narrow)
+          8-9: Accept (strong three-layer contribution, honest limitations)
+          10: Strong Accept (exceptional clinical relevance + technical novelty)
+
+      Paper draft: {draft}
+      {experiment_evidence}
+
+  # ---------- Stage 11: Paper Revision ----------------------------------------
+  paper_revision:
+    max_tokens: 32768
+    system: |
+      You are a paper revision expert for clinical AI submissions. When revising,
+      NEVER shorten sections — only expand, improve, and add content. Preserve the
+      three-layer narrative (world model → multi-agent optimization → neurodegenerative
+      application) throughout all revisions.
+    user: |
+      Revise the paper draft to address all review comments.
+
+      CRITICAL REVISION RULES:
+        1. Maintain or INCREASE paper length. Each section must meet its minimum word count
+           (Abstract 150, Introduction 700, Related Work 500, Method 900, Experiments 600,
+           Results 500, Discussion 350, Limitations 200, Conclusion 200).
+        2. Strengthen the multi-agent policy narrative if any reviewer flagged it as weak.
+        3. If reviewers flagged overclaiming of real clinical validity, add explicit caveats
+           and a paragraph in Limitations about synthetic-to-real generalization gap.
+        4. If ablation studies are missing, add them in the Results section.
+        5. Preserve all mathematical equations and algorithm pseudocode from the original draft.
+        6. Do NOT add references not supported by the collected literature.
+
+      Return revised markdown only.
+
+      {topic_constraint}
+      Draft: {draft}
+      Reviews: {reviews}
+
+  # ---------- Stage 12: Quality Gate ----------------------------------------
+  quality_gate:
+    json_mode: true
+    system: |
+      You are a final quality gate evaluator for clinical AI and multi-agent systems papers.
+    user: |
+      Evaluate the revised paper quality and return JSON.
+
+      Schema: {
+        score_1_to_10: number,
+        verdict: string,
+        strengths: [...],
+        weaknesses: [...],
+        required_actions: [...],
+        three_layer_check: {
+          world_model_present: bool,
+          multi_agent_present: bool,
+          neurodegeneration_present: bool,
+          all_three_connected: bool
+        }
+      }
+
+      THREE-LAYER CHECK:
+        - world_model_present: Does the paper describe a formal world model with
+          state, transition, and reward components?
+        - multi_agent_present: Does the paper describe ≥2 agents with distinct roles
+          and a coordination mechanism?
+        - neurodegeneration_present: Is the neurodegenerative disease clinical context
+          central to the paper (not just mentioned in passing)?
+        - all_three_connected: Does the paper show how the multi-agent policy
+          optimizes the world model strategy for the neurodegenerative application?
+
+      A paper with all_three_connected = false MUST NOT pass the quality gate
+      regardless of score.
+
+      Threshold: {quality_threshold}
+      Paper: {revised}
+
+# ---------------------------------------------------------------------------
+# Sub-prompt overrides (code generation helpers)
+# ---------------------------------------------------------------------------
+sub_prompts:
+  iterative_improve:
+    max_tokens: 8192
+    system: |
+      You improve experiment code for a clinical AI simulation. All experiments model
+      neurodegenerative disease treatment planning using synthetic patient data and
+      multi-agent policies. Return valid executable Python code using ```filename:xxx.py
+      format for each file. Use ONLY numpy and Python stdlib.
+    user: |
+      Improve the experiment code based on prior run results.
+      Return improved files using ```filename:xxx.py format.
+
+      CLINICAL SIMULATION REQUIREMENTS:
+        - Patient biomarker trajectories must follow plausible decline curves
+          (e.g., MMSE ~ 30 * exp(-disease_rate * t) + noise).
+        - Agent policies must be distinct in role (e.g., diagnosis vs. treatment).
+        - The world model transition must be a learned or parameterized function,
+          not pure random noise.
+        - All results must be deterministic given a fixed seed.
+
+      Primary metric key: {metric_key}
+      Metric direction: {metric_direction}
+      Do not use subprocess, os.system, eval, exec, or any network/shell calls.
+
+      Current project files: {files_context}
+      Run summaries (JSON): {run_summaries}
